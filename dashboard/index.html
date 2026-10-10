@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sentinel-X · Supervision</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">SX</span>
+      <div>
+        <h1>Sentinel-X</h1>
+        <p class="sub">Centre de commandement · <span id="group">--</span></p>
+      </div>
+    </div>
+    <div class="pills">
+      <span id="pill-device" class="pill pill-off">Boîtier hors ligne</span>
+      <span id="pill-mqtt" class="pill pill-off">MQTT ?</span>
+      <span id="pill-socket" class="pill pill-off">Temps réel ?</span>
+    </div>
+  </header>
+
+  <main class="grid">
+    <section class="kpis">
+      <div class="kpi" id="kpi-temp"><span class="label">Température</span><span class="value" id="v-temp">--</span><span class="unit">°C</span></div>
+      <div class="kpi" id="kpi-hum"><span class="label">Humidité</span><span class="value" id="v-hum">--</span><span class="unit">%</span></div>
+      <div class="kpi" id="kpi-gas"><span class="label">Gaz (MQ-2)</span><span class="value" id="v-gas">--</span><span class="unit">/ 1023</span></div>
+      <div class="kpi" id="kpi-motion"><span class="label">Présence (PIR)</span><span class="value" id="v-motion">--</span><span class="unit" id="v-lastseen">&nbsp;</span></div>
+    </section>
+
+    <section class="card chart-card">
+      <h2>Température et humidité</h2>
+      <div class="chart-box"><canvas id="chart-env"></canvas></div>
+    </section>
+
+    <section class="card chart-card">
+      <h2>Niveau de gaz</h2>
+      <div class="chart-box"><canvas id="chart-gas"></canvas></div>
+    </section>
+
+    <section class="card video-card">
+      <h2>Vision IA · webcam</h2>
+      <div class="video-box">
+        <img id="video" alt="Flux vidéo de la webcam analysé par l'IA">
+        <p id="video-off" class="video-off">Flux vidéo indisponible</p>
+      </div>
+    </section>
+
+    <section class="card control-card">
+      <h2>Panneau de commande</h2>
+      <label class="key-row">
+        <span>Clé opérateur</span>
+        <input id="api-key" type="password" autocomplete="off" placeholder="X-API-Key">
+      </label>
+      <div class="buttons">
+        <button class="btn btn-danger" data-target="buzzer" data-action="on">Déclencher l'alarme</button>
+        <button class="btn" data-target="buzzer" data-action="beep">Bip</button>
+        <button class="btn" data-target="buzzer" data-action="off">Couper l'alarme</button>
+        <button class="btn btn-red" data-target="led_red" data-action="on">LED rouge ON</button>
+        <button class="btn" data-target="led_red" data-action="off">LED rouge OFF</button>
+        <button class="btn btn-green" data-target="led_green" data-action="on">LED verte ON</button>
+        <button class="btn" data-target="led_green" data-action="off">LED verte OFF</button>
+        <button class="btn btn-ghost" data-target="all" data-action="off">Tout couper</button>
+      </div>
+      <p id="cmd-feedback" class="feedback" role="status"></p>
+    </section>
+
+    <section class="card alerts-card">
+      <h2>Journal des alertes</h2>
+      <ul id="alerts" class="alerts"></ul>
+    </section>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/vendor/chart.js/chart.umd.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

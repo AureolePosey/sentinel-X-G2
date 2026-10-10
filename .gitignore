@@ -1,0 +1,34 @@
+# Secrets : ne JAMAIS commiter
+.env
+*.env
+!*.env.example
+firmware/include/secrets.h
+*.key
+*.pem
+*.csr
+*.srl
+infra/mosquitto/config/passwd
+infra/mosquitto/config/acl
+infra/mosquitto/config/certs/
+infra/mosquitto/certs/
+infra/mosquitto/data/
+infra/secrets/
+infra/monitoring/
+
+# Dépendances et builds
+node_modules/
+firmware/.pio/
+__pycache__/
+*.pyc
+.venv/
+
+# IA : poids de modèles volumineux
+*.pt
+*.onnx
+!ia/models/yolov8n-320.onnx
+
+# Système / éditeurs
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json

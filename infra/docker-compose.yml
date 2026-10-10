@@ -1,0 +1,93 @@
+# Stack serveur Sentinel-X (VM serveur de l'équipe cloud) : Mosquitto TLS + PostgreSQL + API/dashboard.
+# Lancement depuis le dossier infra/ :  docker compose up -d --build
+#
+# Fichiers à créer sur le serveur (tous ignorés par Git, voir infra/README.md) :
+#   secrets/db_password.txt        mot de passe PostgreSQL
+#   secrets/api_key.txt            clé API (X-API-Key) partagée avec le dashboard et l'IA
+#   secrets/mqtt_api_password.txt  mot de passe du compte Mosquitto "api"
+#   mosquitto/certs/ca.crt, server.crt, server.key
+#   mosquitto/config/passwd, mosquitto/config/acl
+name: sentinel
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    user: "1883:1883"
+    # Seul le port chiffré est publié, et seulement sur l'IP du WiFi de table.
+    # Le port 1883 reste interne au réseau Docker (utilisé par l'API).
+    ports: ["${SERVER_IP:-192.168.10.1}:8883:8883"]
+    volumes:
+      - ./mosquitto/config:/mosquitto/config:ro
+      - ./mosquitto/certs:/mosquitto/certs:ro
+      - ./mosquitto/data:/mosquitto/data
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 256m
+    networks: [frontend, backend]
+    healthcheck:
+      test: ["CMD-SHELL", "pidof mosquitto > /dev/null || exit 1"]
+      interval: 30s
+    logging: {driver: json-file, options: {max-size: "10m", max-file: "3"}}
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sentinel
+      POSTGRES_DB: sentinel
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets: [db_password]
+    volumes: [db_data:/var/lib/postgresql/data]
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 512m
+    networks: [backend]          # réseau interne : la base n'est jamais visible depuis le WiFi
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sentinel -d sentinel"]
+      interval: 5s
+      retries: 10
+    logging: {driver: json-file, options: {max-size: "10m", max-file: "3"}}
+
+  api:
+    build:
+      context: ..                # racine du dépôt sentinel-x
+      dockerfile: api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db: {condition: service_healthy}
+      mosquitto: {condition: service_started}
+    environment:
+      PORT: 3000
+      GROUP_ID: g2
+      API_KEY_FILE: /run/secrets/api_key
+      DATABASE_URL: postgres://sentinel@db:5432/sentinel
+      DATABASE_PASSWORD_FILE: /run/secrets/db_password
+      MQTT_URL: mqtt://mosquitto:1883     # écoute interne, le trafic ne quitte pas la machine
+      MQTT_USERNAME: api
+      MQTT_PASSWORD_FILE: /run/secrets/mqtt_api_password
+      VIDEO_URL: ${VIDEO_URL:-http://192.168.10.1:5000/video}
+      GAS_THRESHOLD: ${GAS_THRESHOLD:-400}
+      TEMP_THRESHOLD: ${TEMP_THRESHOLD:-40}
+    secrets: [api_key, db_password, mqtt_api_password]
+    ports: ["${SERVER_IP:-192.168.10.1}:3000:3000"]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 256m
+    networks: [frontend, backend] # frontend : port publié ; backend : base et broker
+    logging: {driver: json-file, options: {max-size: "10m", max-file: "3"}}
+
+secrets:
+  db_password: {file: ./secrets/db_password.txt}
+  api_key: {file: ./secrets/api_key.txt}
+  mqtt_api_password: {file: ./secrets/mqtt_api_password.txt}
+
+networks:
+  frontend: {}
+  backend: {internal: true}
+
+volumes:
+  db_data: {}

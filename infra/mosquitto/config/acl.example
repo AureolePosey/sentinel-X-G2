@@ -1,0 +1,18 @@
+# Modèle d'ACL Mosquitto : copier en "acl" (ignoré par Git).
+# Chaque compte n'a accès qu'à ce dont il a besoin (moindre privilège).
+
+# Boîtier ESP8266 : publie ses mesures et son état, reçoit les commandes
+user esp01
+topic write sentinel/g2/telemetry
+topic write sentinel/g2/status
+topic read sentinel/g2/cmd
+
+# API : lit les mesures et l'état, envoie les commandes
+user api
+topic read sentinel/g2/telemetry
+topic read sentinel/g2/status
+topic write sentinel/g2/cmd
+
+# IA (optionnel, si elle lit la télémétrie en MQTT plutôt que par GET /api/v1/telemetry)
+# user ia
+# topic read sentinel/g2/telemetry

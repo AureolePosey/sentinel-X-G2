@@ -1,0 +1,28 @@
+{
+  "name": "sentinel-x-api",
+  "version": "1.0.0",
+  "description": "API de supervision Sentinel-X : MQTT -> base de données -> REST + Socket.io",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "simulate": "node ../tools/simulateur.js",
+    "broker": "node ../tools/broker-dev.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "chart.js": "^4.4.4",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^7.1.0",
+    "mqtt": "^5.10.1",
+    "pg": "^8.13.0",
+    "socket.io": "^4.8.0"
+  },
+  "devDependencies": {
+    "aedes": "^0.51.3"
+  }
+}

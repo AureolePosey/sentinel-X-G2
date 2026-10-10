@@ -1,0 +1,3 @@
+# Fins de ligne : LF partout (Docker/Linux, ESP8266), CRLF pour les scripts Windows
+* text=auto eol=lf
+*.bat text eol=crlf
